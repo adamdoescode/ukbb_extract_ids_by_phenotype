@@ -60,6 +60,7 @@ args = parser.parse_args()
 
 #list of fields to include
 fields_of_interest = ['eid'] + args.fields.split(' ')
+fields_of_interest_no_eid = args.fields.split(' ')
 #code of interest
 code = args.code
 #UKBB phenotype file to include
@@ -81,14 +82,15 @@ eprint('print_to_stdout:', print_to_stdout)
 #need to identify what columns to use by index
 with open(ukb_pheno_file, 'r') as ukbb_pheno:
     #read in header
-    head_string = ukbb_pheno.readline()
-    try:
-        header = pd.Series(
-        dict(zip([x+1 for x in range(len(head_string.split("\t")))],
-            [any([y in x for y in fields_of_interest]) for x in head_string.split("\t")]))
+    head_string = ukbb_pheno.readline().split("\t")
+    header = pd.Series(
+    dict(zip([x+1 for x in range(len(head_string))],
+        [any([y in x for y in fields_of_interest]) for x in head_string]))
         )
-    except:
-        eprint("your fields are not present in the header of the ukb phenotype file you provided, have you made sure you are using the right file?")
+    flag_if_fields_valid = any([any([y in x for y in fields_of_interest_no_eid]) for x in head_string])
+    eprint("Do user input fields match with any fields in phenotype file:", flag_if_fields_valid)
+    if flag_if_fields_valid == False:
+        eprint("ERROR: no user input fields match those in the header of the ukb phenotype file you provided, have you made sure you are using the right file?")
         sys.exit()
 
 #this is the index of the columns that hold information we care about, want as a space seperate string to pass it into a bash
