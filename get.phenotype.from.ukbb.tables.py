@@ -116,7 +116,12 @@ with open(ukb_pheno_file, 'r') as ukbb_pheno:
             eprint(counter)
 
 #make a dict
-results_dict = dict(zip(header, [[x] for x in results_list[0]]))
+#requires try except for empty list
+try:
+    results_dict = dict(zip(header, [[x] for x in results_list[0]]))
+except:
+    eprint("Your code did not appear in the phenotype file! Did you use the right code and the right phenotype file?")
+    sys.exit()
 
 #this cycles through each row in results_list, coverts to dict, and then appends it to results_dict
 for row in results_list[1:]:

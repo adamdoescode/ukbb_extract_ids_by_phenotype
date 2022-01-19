@@ -1,3 +1,5 @@
 #probably should git ignore a few things!
 **/logs
 **/output
+**/sensitive_data
+*.txt
