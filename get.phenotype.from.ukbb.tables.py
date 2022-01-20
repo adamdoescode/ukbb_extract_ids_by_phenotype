@@ -56,6 +56,9 @@ parser.add_argument('--stdout', '-C', dest = 'stdout', action = 'store_true', re
 parser.add_argument('--out', '-o', dest='output', type=str, required=False, default = 'extracted.rows.from.ukbb.fields.tsv',
     help = 'output filename. Default filename used if not used. This argument is ignored if printing to stdout.'
 )
+parser.add_argument('--all_columns_of_field', '-all', dest='flag_for_all_columns_of_field', action='store_true',
+    help = 'By default this script only select columns that are an exact match to your input field (e.g 40002-0.1 and NOT 40002-0.11). Include this flag to find all columns where the field code appears *including as a substring*. \n example: -all False'
+)
 args = parser.parse_args()
 
 #list of fields to include
@@ -71,6 +74,8 @@ ukb_pheno_file = args.ukbb_file
 print_to_stdout = args.stdout
 #output name
 output = args.output
+#flag for how to search for each column using the user inputted field codes
+flag_for_all_columns_of_field = args.flag_for_all_columns_of_field
 
 #debug prints of variables
 eprint('Inputs are:')
@@ -78,19 +83,33 @@ eprint('fields_of_interest:', fields_of_interest)
 eprint('code:', code)
 eprint('ukb_pheno_file:', ukb_pheno_file)
 eprint('print_to_stdout:', print_to_stdout)
+eprint('flag_for_all_columns_of_field:', flag_for_all_columns_of_field)
 
 #need to identify what columns to use by index
 with open(ukb_pheno_file, 'r') as ukbb_pheno:
     #read in header
     head_string = ukbb_pheno.readline().split("\t")
-    header = pd.Series(
-    dict(zip([x+1 for x in range(len(head_string))],
-        [any([y in x for y in fields_of_interest]) for x in head_string]))
-        )
+    #test for whether any user fields are actually in the header
     flag_if_fields_valid = any([any([y in x for y in fields_of_interest_no_eid]) for x in head_string])
     eprint("Do user input fields match with any fields in phenotype file:", flag_if_fields_valid)
     if flag_if_fields_valid == False:
         eprint("ERROR: no user input fields match those in the header of the ukb phenotype file you provided, have you made sure you are using the right file?")
+        sys.exit()
+    #this line looks for field_from_userinput within each field_from_pheno extracted from the header.
+    #then it returns true for each field that is present
+    #finally, it zips this with the header string and converts to a dict
+    if flag_for_all_columns_of_field == True:
+        eprint("all columns of field")
+        #get general matches
+        header = pd.Series(dict(zip([x+1 for x in range(len(head_string))],
+            [any([field_from_userinput in field_from_pheno for field_from_userinput in fields_of_interest]) for field_from_pheno in head_string])))
+    elif flag_for_all_columns_of_field == False:
+        eprint("specific columns only")
+        #only get exact matches
+        header = pd.Series(dict(zip([x+1 for x in range(len(head_string))],
+            [any([field_from_userinput == field_from_pheno for field_from_userinput in fields_of_interest]) for field_from_pheno in head_string])))
+    else:
+        eprint("flag_for_all_columns_of_field is not set! This is an error and you should report this to A.Graham adam.graham@uon.edu.au")
         sys.exit()
 
 #this is the index of the columns that hold information we care about, want as a space seperate string to pass it into a bash
