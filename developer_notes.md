@@ -6,11 +6,13 @@ After presenting this repo/script to the lab I have been given a few suggestions
 - [x] Error when no rows return a result - add try/except clause
 - [x] DEBUG try except clause for field names/codes
 - [x] timecourse fields; should be as simple as specifying specific column eg 40002.1
-  - [ ] debug of issue with column selection
-- [ ] make sure doesn't get wrong phenotype code e.g F20 is for other things than SCZ
-- [ ] more difficult to avoid is cases where there is something like F200* for a different field. Oh no! Should be mostly okay, but worth checking...
+  - [x] debug of issue with column selection
+- [x] make sure doesn't get wrong phenotype code e.g F20 is for other things than SCZ - no way to avoid. But maybe this doesn't actually occur in the UKBB?
+- [x] more difficult to avoid is cases where there is something like F200* for a different field. Oh no! Should be mostly okay, but worth checking.
 - [ ] continous traits? Probably doesn't work, could set up a flag and an if statement to process these differently which should be pretty feasible but maybe not needed?
 - [x] only print columns user selects in field flag cmd input - already does this, no need to edit
+- [ ] refactor code into functions
+- [ ] remove endline '\n' from rows, eg: '41283-0.15\n'
 - [ ] maybe todo: pull row descriptions from ukb47659.html which tags with field number code thingy anyway
 
 
@@ -120,10 +122,35 @@ python -u get.phenotype.from.ukbb.tables.py \
     -F '40002-0.1' \
     -uc F20 \
     -uf sensitive_data/10k.with.char.mental.health.txt \
-    -o output/quick.test.specific.col.tsv
+    -o output/quick.test.specific.col.tsv \
+    -all
 ```
 Output has only 40002-0.1 and not 40002-0.10 etc.
 
 This now works!
 
+# adding functions
 
+Was a bad idea and now loads of things have broken.
+
+Current problem:
+```
+python -u get.phenotype.from.ukbb.tables.py \
+    -F '40002-0.1' \
+    -uc F20 \
+    -uf sensitive_data/10k.with.char.mental.health.txt \
+    -o output/quick.test.specific.col.tsv
+```
+Traceback (most recent call last):
+  File "get.phenotype.from.ukbb.tables.py", line 176, in <module>
+    main()
+  File "get.phenotype.from.ukbb.tables.py", line 173, in main
+    format_and_save_output(results_list, head_string)
+  File "get.phenotype.from.ukbb.tables.py", line 160, in format_and_save_output
+    results_dict[key].append(temp_row_dict[key])
+UnboundLocalError: local variable 'temp_row_dict' referenced before assignment
+(adams) 
+
+This turned out to be an indentation error but also an indexing error. Both now fixed.
+
+Test for a few different fields and codes, see 
