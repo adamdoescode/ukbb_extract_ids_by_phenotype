@@ -18,6 +18,7 @@ def input_parsing():
     global ukb_pheno_file
     global output
     global flag_for_all_columns_of_field
+    global fields_of_interest_no_eid
     #parser
     parser = argparse.ArgumentParser(
         description = 'Extracts rows from UKBB phenotype files containing the right code in the right field(s)'
@@ -55,18 +56,47 @@ def select_columns():
     '''
     based on input, selects columns and pulls them, row by row, into a pandas dataframe
     '''
-    pass
+    #need to identify what columns to use by index
+    with open(ukb_pheno_file, 'r') as ukbb_pheno:
+        #read in header
+        head_string = ukbb_pheno.readline().split("\t")
+        #test for whether any user fields are actually in the header
+        flag_if_fields_valid = any([any([y in x for y in fields_of_interest_no_eid]) for x in head_string])
+        eprint("Do user input fields match with any fields in phenotype file:", flag_if_fields_valid)
+        if flag_if_fields_valid == False:
+            eprint("ERROR: no user input fields match those in the header of the ukb phenotype file you provided, have you made sure you are using the right file?")
+            sys.exit()
+        #this line looks for field_from_userinput within each field_from_pheno extracted from the header.
+        #then it returns true for each field that is present
+        #finally, it zips this with the header string and converts to a dict
+        if flag_for_all_columns_of_field == True:
+            eprint("testing all columns of field")
+            #get general matches
+            header = pd.Series(dict(zip([x+1 for x in range(len(head_string))],
+                [any([field_from_userinput in field_from_pheno for field_from_userinput in fields_of_interest]) for field_from_pheno in head_string])))
+        elif flag_for_all_columns_of_field == False:
+            eprint("testing specific columns only")
+            #only get exact matches
+            header = pd.Series(dict(zip([x+1 for x in range(len(head_string))],
+                [any([field_from_userinput == field_from_pheno for field_from_userinput in fields_of_interest]) for field_from_pheno in head_string])))
+        else:
+            eprint("flag_for_all_columns_of_field is not set! This is an error and you should report this to A.Graham adam.graham@uon.edu.au")
+            sys.exit()
+        #this is the index of the columns that hold information we care about, want as a space seperate string to pass it into a bash
+        header_index_of_interest = list(header[header == True].index)
+    eprint(header_index_of_interest)
+    return header_index_of_interest
 
 def print_columns():
     '''
     print results to tsv (or stdout?)
     '''
-    pass
+    
 
 def main():
     input_parsing()
-    select_columns()
-    print_columns()
+    header_index_of_interest = select_columns()
+    print_columns(header_index_of_interest)
 
 if __name__ == "__main__":
     main()
