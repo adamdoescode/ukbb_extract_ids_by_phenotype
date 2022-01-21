@@ -152,6 +152,10 @@ def format_and_save_output(results_list, head_string):
     filtered_table = pd.DataFrame(results_dict)
     if print_to_stdout == False:
         filtered_table.to_csv(output, index=False, sep="\t")
+    else:
+        #this needs fixing...
+        for row in filtered_table:
+            print(row)
 
     eprint('Done, exiting')
     sys.exit()

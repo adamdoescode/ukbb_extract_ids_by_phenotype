@@ -85,18 +85,38 @@ def select_columns():
         #this is the index of the columns that hold information we care about, want as a space seperate string to pass it into a bash
         header_index_of_interest = list(header[header == True].index)
     eprint(header_index_of_interest)
-    return header_index_of_interest
+    return header_index_of_interest, head_string
 
-def print_columns():
+def print_columns(header_index_of_interest, head_string):
     '''
     print results to tsv (or stdout?)
     '''
+    with open(ukb_pheno_file, 'r') as ukbb_pheno:
+        #skip header row by iterating once
+        ukbb_pheno.readline()
+        #temp list for all rows, could get pretty big...
+        results_list = []
+        for row in ukbb_pheno:
+            row = row.split("\t")
+            #we only want columns that are the fields we are interested in
+            #minus 1 the index to get the python count from zero
+            row_subset = [row[column_index-1] for column_index in header_index_of_interest]
+            results_list.append(row_subset)
+        results_dict = dict(zip(head_string, [[x] for x in results_list[0]]))
+        for row in results_list[1:]:
+            temp_row_dict = dict(zip(head_string,row))
+        #indentation error here which is now fixed
+            for key in results_dict:
+                results_dict[key].append(temp_row_dict[key])
     
+    #covert results_dict to dataframe and export to tsv
+    filtered_table = pd.DataFrame(results_dict)
+    filtered_table.to_csv(output, index=False, sep="\t")
 
 def main():
     input_parsing()
-    header_index_of_interest = select_columns()
-    print_columns(header_index_of_interest)
+    header_index_of_interest, head_string = select_columns()
+    print_columns(header_index_of_interest, head_string)
 
 if __name__ == "__main__":
     main()
