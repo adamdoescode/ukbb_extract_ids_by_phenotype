@@ -18,7 +18,7 @@ The reason I do it like this is because I can't keep the whole table in memory. 
 
 You can use the tsv for downstream applications such as filtering UKBB bgen files or performing PRS scoring etc.
 
-Example of how to use this script to extract ICD10 code for schizophrenia (F20) from the ICD10 fields (40002 41270 41202 41204 41201 40006 40001):
+Example of how to use this script to extract ICD10 code for schizophrenia (F20) from the ICD10 fields (40002 41270 41202 41204 41201 40006 40001) **on neuromol**:
 ```
 conda activate adams
 

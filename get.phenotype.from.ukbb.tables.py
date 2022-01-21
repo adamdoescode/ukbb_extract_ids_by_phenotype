@@ -14,19 +14,6 @@ The reason I do it like this is because I can't keep the whole table in memory. 
 6. when done perform QC:
    1. Check all rows have at least one positive hit for the code you want
 7. convert results dict to dataframe and export to tsv
-
-TODO
-- DONE make inputs sys.arg inputs from script call
-- DONE option to print to stdout
-- DONE (kinda, but it doesn't flush properly and I don't know why) print to stderr not stdout
-- DONE make output filename a sys.arg input
-- DONE test with other files and codes
-- DEBUG try except clause for field names/codes
-- timecourse fields; should be as simple as specifying specific column eg 40002.1
-- make sure doesn't get wrong phenotype code e.g F20 is for other things than SCZ
-- more difficult to avoid is cases where there is something like F200* for a different field. Oh no! Should be mostly okay, but worth checking...
-- continous traits? Probably doesn't work, could set up a flag and an if statement to process these differently which should be pretty feasible but maybe not needed?
-- maybe todo: pull row descriptions from ukb47659.html which tags with field number code thingy anyway
 '''
 
 import sys
