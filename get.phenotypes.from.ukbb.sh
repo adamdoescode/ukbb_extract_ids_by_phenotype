@@ -16,7 +16,8 @@ python -u get.phenotype.from.ukbb.tables.py \
     -F '40002 41270 41202 41204 41201 40006 40001' \
     -uc F20 \
     -uf /home/control/data/UKBB_July_2021_version/Subsetted_phenotype_fields/Longitudinal_medical_history_UKBB_July_2021_Freeze.txt \
-    -o output/scz.pheno.subset.tsv
+    -o output/scz.pheno.subset.tsv \
+    --all
 
 python -u get.phenotype.from.ukbb.tables.py \
     -F '40002 41270 41202 41204 41201 40006 40001' \
