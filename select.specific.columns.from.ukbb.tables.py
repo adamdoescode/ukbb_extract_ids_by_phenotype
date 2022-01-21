@@ -5,6 +5,7 @@ This script simply finds all the columns you want and returns them as a new tsv 
 
 import sys
 import argparse
+from tkinter import E
 import pandas as pd
 
 def eprint(*args, **kwargs):
@@ -19,6 +20,7 @@ def input_parsing():
     global output
     global flag_for_all_columns_of_field
     global fields_of_interest_no_eid
+    global just_print_index
     #parser
     parser = argparse.ArgumentParser(
         description = 'Extracts rows from UKBB phenotype files containing the right code in the right field(s)'
@@ -35,6 +37,9 @@ def input_parsing():
     parser.add_argument('--all_columns_of_field', '-all', dest='flag_for_all_columns_of_field', action='store_true',
         help = 'By default this script only select columns that are an exact match to your input field (e.g 40002-0.1 and NOT 40002-0.11). Include this flag to find all columns where the field code appears *including as a substring*. \n example: -all False'
     )
+    parser.add_argument('--just_print_index', '-i', dest='just_print_index', action='store_true',
+        help = 'Include this flag to just print the index of each column you are interested in. Includes eid column by default. \n example: -i'
+    )
     args = parser.parse_args()
     #list of fields to include
     fields_of_interest = ['eid'] + args.fields.split(' ')
@@ -46,11 +51,14 @@ def input_parsing():
     output = args.output
     #flag for how to search for each column using the user inputted field codes
     flag_for_all_columns_of_field = args.flag_for_all_columns_of_field
+    #flag for not printing columns but just the index
+    just_print_index = args.just_print_index
     #debug prints
     eprint('Inputs are:')
     eprint('fields_of_interest:', fields_of_interest)
     eprint('ukb_pheno_file:', ukb_pheno_file)
     eprint('flag_for_all_columns_of_field:', flag_for_all_columns_of_field)
+    eprint('just_print_index:', just_print_index)
 
 def select_columns():
     '''
@@ -84,39 +92,44 @@ def select_columns():
             sys.exit()
         #this is the index of the columns that hold information we care about, want as a space seperate string to pass it into a bash
         header_index_of_interest = list(header[header == True].index)
-    eprint(header_index_of_interest)
     return header_index_of_interest, head_string
 
-def print_columns(header_index_of_interest, head_string):
+def print_columns(just_print_index, header_index_of_interest, head_string):
     '''
     print results to tsv (or stdout?)
     '''
-    with open(ukb_pheno_file, 'r') as ukbb_pheno:
-        #skip header row by iterating once
-        ukbb_pheno.readline()
-        #temp list for all rows, could get pretty big...
-        results_list = []
-        for row in ukbb_pheno:
-            row = row.split("\t")
-            #we only want columns that are the fields we are interested in
-            #minus 1 the index to get the python count from zero
-            row_subset = [row[column_index-1] for column_index in header_index_of_interest]
-            results_list.append(row_subset)
-        results_dict = dict(zip(head_string, [[x] for x in results_list[0]]))
-        for row in results_list[1:]:
-            temp_row_dict = dict(zip(head_string,row))
-        #indentation error here which is now fixed
-            for key in results_dict:
-                results_dict[key].append(temp_row_dict[key])
-    
-    #covert results_dict to dataframe and export to tsv
-    filtered_table = pd.DataFrame(results_dict)
-    filtered_table.to_csv(output, index=False, sep="\t")
+    if just_print_index == True:
+        eprint(header_index_of_interest)
+        eprint("Header columns are:")
+        [print(x, end=" ") for x in header_index_of_interest]
+        sys.exit()
+    elif just_print_index == False:
+        with open(ukb_pheno_file, 'r') as ukbb_pheno:
+            #skip header row by iterating once
+            ukbb_pheno.readline()
+            #temp list for all rows, could get pretty big...
+            results_list = []
+            for row in ukbb_pheno:
+                row = row.split("\t")
+                #we only want columns that are the fields we are interested in
+                #minus 1 the index to get the python count from zero
+                row_subset = [row[column_index-1] for column_index in header_index_of_interest]
+                results_list.append(row_subset)
+            results_dict = dict(zip(head_string, [[x] for x in results_list[0]]))
+            for row in results_list[1:]:
+                temp_row_dict = dict(zip(head_string,row))
+            #indentation error here which is now fixed
+                for key in results_dict:
+                    results_dict[key].append(temp_row_dict[key])
+        
+        #covert results_dict to dataframe and export to tsv
+        filtered_table = pd.DataFrame(results_dict)
+        filtered_table.to_csv(output, index=False, sep="\t")
 
 def main():
     input_parsing()
     header_index_of_interest, head_string = select_columns()
-    print_columns(header_index_of_interest, head_string)
+    print_columns(just_print_index, header_index_of_interest, head_string)
 
 if __name__ == "__main__":
     main()
