@@ -154,3 +154,16 @@ UnboundLocalError: local variable 'temp_row_dict' referenced before assignment
 This turned out to be an indentation error but also an indexing error. Both now fixed.
 
 Test for a few different fields and codes, see 
+
+# companion script for pulling whole columns
+
+Sometimes you just want all of a specifc column. This sounds easy, but it is a bit of a pain to find which column index matches your column(s). You also need to deal with not knowing how many columns match your field code. These are easily solved with a simple python script.
+
+```
+python3 -u select.specific.columns.from.ukbb.tables.py \
+    -F '40002 40001' \
+    -uf sensitive_data/10k.with.char.mental.health.txt \
+    -o output/test.pull.whole.columns.tsv \
+    --all
+```
+

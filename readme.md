@@ -49,3 +49,16 @@ python -u scripts/get.phenotype.from.ukbb.tables.py \
 ```
 
 Output tsv will be: `scz.pheno.subset.tsv` and it will currently contain every column from the input table but with only the rows containing the right phenotype code in the right column(s)/field(s).
+
+# companion script for pulling whole columns
+
+Sometimes you just want all of a specifc column. This sounds easy, but it is a bit of a pain to find which column index matches your column(s). You also need to deal with not knowing how many columns match your field code. These are easily solved with a simple python script.
+
+```
+python3 -u select.specific.columns.from.ukbb.tables.py \
+    -F '40002 41270 41202 41204 41201 40006 40001' \
+    -uf /home/control/data/UKBB_July_2021_version/Subsetted_phenotype_fields/Longitudinal_medical_history_UKBB_July_2021_Freeze.txt \
+    -o output/scz.pheno.subset.tsv \
+    --all
+```
+

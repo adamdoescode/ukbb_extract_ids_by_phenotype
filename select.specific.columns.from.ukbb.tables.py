@@ -14,6 +14,11 @@ def input_parsing():
     '''
     Parse input flags etc return a few globals for use in next few functions
     '''
+    global fields_of_interest
+    global ukb_pheno_file
+    global output
+    global flag_for_all_columns_of_field
+    #parser
     parser = argparse.ArgumentParser(
         description = 'Extracts rows from UKBB phenotype files containing the right code in the right field(s)'
     )
@@ -29,6 +34,22 @@ def input_parsing():
     parser.add_argument('--all_columns_of_field', '-all', dest='flag_for_all_columns_of_field', action='store_true',
         help = 'By default this script only select columns that are an exact match to your input field (e.g 40002-0.1 and NOT 40002-0.11). Include this flag to find all columns where the field code appears *including as a substring*. \n example: -all False'
     )
+    args = parser.parse_args()
+    #list of fields to include
+    fields_of_interest = ['eid'] + args.fields.split(' ')
+    fields_of_interest_no_eid = args.fields.split(' ')
+    #UKBB phenotype file to include
+    #make sure to include full path name!
+    ukb_pheno_file = args.ukbb_file
+    #output name
+    output = args.output
+    #flag for how to search for each column using the user inputted field codes
+    flag_for_all_columns_of_field = args.flag_for_all_columns_of_field
+    #debug prints
+    eprint('Inputs are:')
+    eprint('fields_of_interest:', fields_of_interest)
+    eprint('ukb_pheno_file:', ukb_pheno_file)
+    eprint('flag_for_all_columns_of_field:', flag_for_all_columns_of_field)
 
 def select_columns():
     '''
