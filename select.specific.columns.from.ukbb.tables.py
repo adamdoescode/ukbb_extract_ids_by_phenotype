@@ -106,7 +106,7 @@ def print_columns(just_print_index, header_index_of_interest, head_string):
     elif just_print_index == False:
         with open(ukb_pheno_file, 'r') as ukbb_pheno:
             #skip header row by iterating once
-            ukbb_pheno.readline()
+            #ukbb_pheno.readline()
             #temp list for all rows, could get pretty big...
             results_list = []
             for row in ukbb_pheno:
@@ -115,9 +115,10 @@ def print_columns(just_print_index, header_index_of_interest, head_string):
                 #minus 1 the index to get the python count from zero
                 row_subset = [row[column_index-1] for column_index in header_index_of_interest]
                 results_list.append(row_subset)
-            results_dict = dict(zip(head_string, [[x] for x in results_list[0]]))
+            subsetted_head_string = [head_string[column_index-1] for column_index in header_index_of_interest]
+            results_dict = dict(zip(subsetted_head_string, [[x] for x in results_list[0]]))
             for row in results_list[1:]:
-                temp_row_dict = dict(zip(head_string,row))
+                temp_row_dict = dict(zip(subsetted_head_string,row))
             #indentation error here which is now fixed
                 for key in results_dict:
                     results_dict[key].append(temp_row_dict[key])

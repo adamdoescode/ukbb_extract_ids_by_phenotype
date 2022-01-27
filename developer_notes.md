@@ -14,6 +14,7 @@ After presenting this repo/script to the lab I have been given a few suggestions
 - [ ] refactor code into functions
 - [ ] remove endline '\n' from rows, eg: '41283-0.15\n'
 - [ ] maybe todo: pull row descriptions from ukb47659.html which tags with field number code thingy anyway
+- [ ] FIX: wrong column headers for select.whole.columns.py script
 
 
 #  ~~debug try except clause for field names/codes~~ Error when no rows return a result - add try/except clause
@@ -167,3 +168,56 @@ python3 -u select.specific.columns.from.ukbb.tables.py \
     --all
 ```
 
+# FIX: wrong column headers for select.whole.columns.py script
+
+This command pulls the wrong columns (or headers?):
+```
+python3 -u select.specific.columns.from.ukbb.tables.py \
+    -F '40002 40001' \
+    -uf /home/control/data/UKBB_July_2021_version/Subsetted_phenotype_fields/Longitudinal_medical_history_UKBB_July_2021_Freeze.txt \
+    -o output/test.pull.whole.columns.tsv \
+    --all
+```
+
+These column fields are present in the header. So it's not finding things that are not there.
+
+It correctly pulls the eid column which is good.
+
+But it then just pulls the next columns until it has enough to match with the number that match with the number of fields in `-F '40002 40001'`.
+
+Does it do the same with the sample data?
+
+```
+python3 -u select.specific.columns.from.ukbb.tables.py \
+    -F '40002 40001' \
+    -uf sensitive_data/10k.with.char.mental.health.txt \
+    -o output/select.wrong.output.debug.sampledata.tsv \
+    --all
+```
+
+Yes. So I can safely use the sample data to troubleshoot.
+
+I think the important variable is `header_index_of_interest`.
+
+So printing that column returns the right indicies for the columns we want:
+
+[1, 1453, 1454, 1455, 1456, 1457, 1458, 1459, 1460, 1461, 1462, 1463, 1464, 1465, 1466, 1467, 1468, 1469, 1470, 1471, 1472, 1473, 1474, 1475, 1476, 1477, 1478, 1479, 1480, 1481, 1482]
+% head -1 sensitive_data/10k.with.char.mental.health.txt | awk '{print $1453}'
+40001-0.0
+
+I have modified a few lines in the `print_columns()` algorithm so that it outputs correctly now.
+
+`rg 1000067 sensitive_data/10k.with.char.mental.health.txt | rg G122`
+
+I should double check that the same is not happening in the `get.phenotype.from.ukbb.tables.py` script:
+
+```
+python3 -u get.phenotype.from.ukbb.tables.py \
+    -F '40002' \
+    -uc F20 \
+    --all \
+    -uf sensitive_data/10k.with.char.mental.health.txt \
+    -o output/quick.test.specific.col.tsv
+```
+
+It seems to be working fine.
