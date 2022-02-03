@@ -98,7 +98,7 @@ def get_columns_and_find_rows():
             eprint("testing all columns of field")
             #get general matches
             header = pd.Series(dict(zip([x+1 for x in range(len(head_string))],
-                [any([field_from_userinput in field_from_pheno for field_from_userinput in fields_of_interest]) for field_from_pheno in head_string])))
+                [any([field_from_userinput == field_from_pheno.split("-")[0] for field_from_userinput in fields_of_interest]) for field_from_pheno in head_string])))
         elif flag_for_all_columns_of_field == False:
             eprint("testing specific columns only")
             #only get exact matches

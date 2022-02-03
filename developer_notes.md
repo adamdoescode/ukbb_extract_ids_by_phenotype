@@ -17,6 +17,24 @@ After presenting this repo/script to the lab I have been given a few suggestions
 - [ ] FIX: wrong column headers for select.whole.columns.py script
 - [ ] FIX: fields less than 6 digits pull those with 6 or more digits because I am using a simple "in" statement to test. Need to test for field followed by "-".
 
+Quick test for `get.phenotype.from.ukbb.tables.py`:
+```
+python3 -u get.phenotype.from.ukbb.tables.py \
+    -F '40002' \
+    -uc F20 \
+    -uf sensitive_data/10k.with.char.mental.health.txt \
+    -o output/quick.test.all.tsv \
+    -all
+```
+
+Quick test for `select.specific.columns.from.ukbb.tables.py`:
+```
+python3 -u select.specific.columns.from.ukbb.tables.py \
+    -F '21001' \
+    -uf sensitive_data/ukb47.head.txt \
+    -o output/bugs.21001.ukb47head.tsv \
+    --all
+```
 
 #  ~~debug try except clause for field names/codes~~ Error when no rows return a result - add try/except clause
 
