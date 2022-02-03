@@ -343,7 +343,10 @@ Fixed by changing `field_from_userinput in field_from_pheno.split` to `field_fro
                 [any([field_from_userinput == field_from_pheno.split("-")[0] for field_from_userinput in fields_of_interest]) for field_from_pheno in head_string])))
 ```
 
+Fixed!
+
 ## eid missing issue
+
 
 ```
 python3 -u select.specific.columns.from.ukbb.tables.py \
@@ -352,8 +355,22 @@ python3 -u select.specific.columns.from.ukbb.tables.py \
     -o output/bugs.21001.ukb47head.tsv \
     --all
 python3 -u select.specific.columns.from.ukbb.tables.py \
-    -F '2' \
+    -F '3' \
     -uf sensitive_data/ukb47.head.txt \
     -o output/bugs.2.ukb47head.tsv \
     --all
 ```
+
+eid missing from `output/bugs.21001.ukb47head.tsv`
+eid present in `output/bugs.2.ukb47head.tsv` but is in column 2?
+
+Suggests an off-by-1 error somewhere.
+
+Yes, it is in these lines in `print_columns()`:
+```
+                row_subset = [row[column_index-1].replace("\n","") for column_index in header_index_of_interest]
+                results_list.append(row_subset)
+            subsetted_head_string = [head_string[column_index-1] for column_index in header_index_of_interest]
+```
+
+I have removed the -1 from column index here.
