@@ -67,7 +67,7 @@ def select_columns():
     #need to identify what columns to use by index
     with open(ukb_pheno_file, 'r') as ukbb_pheno:
         #read in header
-        head_string = ukbb_pheno.readline().split("\t")
+        head_string = ukbb_pheno.readline().replace("\n","").split("\t")
         #test for whether any user fields are actually in the header
         flag_if_fields_valid = any([any([y in x for y in fields_of_interest_no_eid]) for x in head_string])
         eprint("Do user input fields match with any fields in phenotype file:", flag_if_fields_valid)
@@ -81,7 +81,7 @@ def select_columns():
             eprint("testing all columns of field")
             #get general matches
             header = pd.Series(dict(zip([x+1 for x in range(len(head_string))],
-                [any([field_from_userinput in field_from_pheno for field_from_userinput in fields_of_interest]) for field_from_pheno in head_string])))
+                [any([field_from_userinput == field_from_pheno.split("-")[0] for field_from_userinput in fields_of_interest]) for field_from_pheno in head_string])))
         elif flag_for_all_columns_of_field == False:
             eprint("testing specific columns only")
             #only get exact matches
@@ -106,14 +106,16 @@ def print_columns(just_print_index, header_index_of_interest, head_string):
     elif just_print_index == False:
         with open(ukb_pheno_file, 'r') as ukbb_pheno:
             #skip header row by iterating once
-            #ukbb_pheno.readline()
+            ukbb_pheno.readline()
             #temp list for all rows, could get pretty big...
             results_list = []
             for row in ukbb_pheno:
+                #removes EOL at end of each row
+                row = row.replace("\n","")
                 row = row.split("\t")
                 #we only want columns that are the fields we are interested in
                 #minus 1 the index to get the python count from zero
-                row_subset = [row[column_index-1] for column_index in header_index_of_interest]
+                row_subset = [row[column_index-1].replace("\n","") for column_index in header_index_of_interest]
                 results_list.append(row_subset)
             subsetted_head_string = [head_string[column_index-1] for column_index in header_index_of_interest]
             results_dict = dict(zip(subsetted_head_string, [[x] for x in results_list[0]]))
@@ -125,7 +127,7 @@ def print_columns(just_print_index, header_index_of_interest, head_string):
         
         #covert results_dict to dataframe and export to tsv
         filtered_table = pd.DataFrame(results_dict)
-        filtered_table.to_csv(output, index=False, sep="\t")
+        filtered_table.to_csv(output, index=False, sep="\t", encoding="utf-8")
 
 def main():
     input_parsing()

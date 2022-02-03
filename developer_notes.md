@@ -15,6 +15,7 @@ After presenting this repo/script to the lab I have been given a few suggestions
 - [ ] remove endline '\n' from rows, eg: '41283-0.15\n'
 - [ ] maybe todo: pull row descriptions from ukb47659.html which tags with field number code thingy anyway
 - [ ] FIX: wrong column headers for select.whole.columns.py script
+- [ ] FIX: fields less than 6 digits pull those with 6 or more digits because I am using a simple "in" statement to test. Need to test for field followed by "-".
 
 
 #  ~~debug try except clause for field names/codes~~ Error when no rows return a result - add try/except clause
@@ -221,3 +222,138 @@ python3 -u get.phenotype.from.ukbb.tables.py \
 ```
 
 It seems to be working fine.
+
+# more bugs in select.specific.columns.from.ukbb.tables.py identified by danielle
+
+- [ ] header prints twice
+- [ ] eid row does not print
+- [ ] all other rows incorrect
+
+First I should see if I can replicate these bugs:
+
+```
+python3 -u select.specific.columns.from.ukbb.tables.py \
+    -F '40002 40001' \
+    -uf sensitive_data/10k.with.char.mental.health.txt \
+    -o output/more.bugs.debug.sampledata.tsv \
+    --all
+```
+This produces the duplicate header column but the eid row is correct.
+
+Try using the full phenotype file instead:
+```
+python3 -u select.specific.columns.from.ukbb.tables.py \
+    -F '40002 40001' \
+    -uf /home/control/data/UKBB_July_2021_version/ukb47659.txt \
+    -o output/more.bugs.debug.sampledata.full.pheno.tsv \
+    --all
+```
+
+Okay so this has all danielle's described problems.
+
+I should make a file that contains the first 10 rows and 10 cols of ukb47659 and test that:
+```
+head /home/control/data/UKBB_July_2021_version/ukb47659.txt > sensitive_data/ukb47.head.txt
+head /home/control/data/UKBB_July_2021_version/ukb47659.txt | awk '{print $1 "\t" $2 "\t" $3 "\t" $4 "\t" $5 "\t" $6 "\t" $7 "\t" $8 "\t" $9 "\t" $10}' > sensitive_data/ukb47.head.first10cols.txt
+python3 -u select.specific.columns.from.ukbb.tables.py \
+    -F '21001' \
+    -uf sensitive_data/ukb47.head.txt \
+    -o output/more.bugs.debug.ukb47head.tsv \
+    --all
+python3 select.specific.columns.from.ukbb.tables.py \
+    -F '5' \
+    -uf sensitive_data/ukb47.head.first10cols.txt \
+    -o output/more.bugs.debug.ukb47head.10cols.tsv \
+    --all
+```
+
+For some reason the awk command is introducing new issues. Nope looks like it is an issue with the column with "5-0.0" in the header? But it looks fine...
+
+```
+head /home/control/data/UKBB_July_2021_version/ukb47659.txt | awk '{print $1 "\t" $2 "\t" $3 "\t" $4 "\t" $5 "\t" $6 "\t" $7 "\t" $8 "\t" $9 "\t" $10 "\t" $11}' > sensitive_data/ukb47.head.first11cols.txt
+python3 select.specific.columns.from.ukbb.tables.py \
+    -F '5' \
+    -uf sensitive_data/ukb47.head.first11cols.txt \
+    -o output/more.bugs.debug.ukb47head.11cols.tsv \
+    --all
+```
+
+The commas are from end of line characters. We can delete them like so:
+for the head string which becomes the header:
+head_string = ukbb_pheno.readline().replace("\n","").split("\t")
+
+And similarly when we open the file again for the rest of the rows.
+
+## double header
+
+For the double header the lines of interest are:
+```
+        with open(ukb_pheno_file, 'r') as ukbb_pheno:
+            #skip header row by iterating once
+            ukbb_pheno.readline()
+```
+
+So uncommenting `ukbb_pheno.readline()` works for the full phenotype file. But I think it will now skip a line for the longitudinal results?
+
+Let's check:
+```
+python3 -u select.specific.columns.from.ukbb.tables.py \
+    -F '40002' \
+    -uf sensitive_data/10k.with.char.mental.health.txt \
+    -o output/more.bugs.debug.sampledata.tsv \
+    --all
+```
+And then inspect headers for same eid in first row:
+```
+head -2 sensitive_data/10k.with.char.mental.health.txt | awk '{print $1}'
+head -2 output/more.bugs.debug.sampledata.tsv | awk '{print $1}'
+head -2 sensitive_data/ukb47.head.first11cols.txt | awk '{print $1}'
+head -2 output/more.bugs.debug.ukb47head.11cols.tsv | awk '{print $1}'
+```
+eid
+1000013
+eid
+1000013
+eid
+1000013
+eid
+1000013
+
+Nope, it's fine!
+
+## short fields picking up all longer fields where it is contained as a sub-field
+
+This is problematic for picking these shorter field names. Should be able to regex a solution.
+
+This repos the problem without making a huge file:
+```
+python3 -u select.specific.columns.from.ukbb.tables.py \
+    -F '2' \
+    -uf sensitive_data/ukb47.head.txt \
+    -o output/bugs.2.ukb47head.tsv \
+    --all
+```
+
+Fixed by changing `field_from_userinput in field_from_pheno.split` to `field_from_userinput == field_from_pheno.split("-")[0]` here:
+```
+        if flag_for_all_columns_of_field == True:
+            eprint("testing all columns of field")
+            #get general matches
+            header = pd.Series(dict(zip([x+1 for x in range(len(head_string))],
+                [any([field_from_userinput == field_from_pheno.split("-")[0] for field_from_userinput in fields_of_interest]) for field_from_pheno in head_string])))
+```
+
+## eid missing issue
+
+```
+python3 -u select.specific.columns.from.ukbb.tables.py \
+    -F '21001' \
+    -uf sensitive_data/ukb47.head.txt \
+    -o output/bugs.21001.ukb47head.tsv \
+    --all
+python3 -u select.specific.columns.from.ukbb.tables.py \
+    -F '2' \
+    -uf sensitive_data/ukb47.head.txt \
+    -o output/bugs.2.ukb47head.tsv \
+    --all
+```
