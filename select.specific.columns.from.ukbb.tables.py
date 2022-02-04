@@ -117,7 +117,7 @@ def print_columns(just_print_index, header_index_of_interest, head_string):
                 #minus 1 the index to get the python count from zero
                 row_subset = [row[column_index].replace("\n","") for column_index in header_index_of_interest]
                 results_list.append(row_subset)
-            subsetted_head_string = [head_string[column_index] for column_index in header_index_of_interest]
+            subsetted_head_string = [head_string[column_index-1] for column_index in header_index_of_interest]
             results_dict = dict(zip(subsetted_head_string, [[x] for x in results_list[0]]))
             for row in results_list[1:]:
                 temp_row_dict = dict(zip(subsetted_head_string,row))

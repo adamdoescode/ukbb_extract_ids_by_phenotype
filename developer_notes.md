@@ -392,3 +392,47 @@ Yes, it is in these lines in `print_columns()`:
 ```
 
 I have removed the -1 from column index here.
+
+# danielle has more bugs
+
+But these ones are not vital:
+- header of the column that corresponds to sex is X34.0.0 when I would expect it to be X31.0.0
+- extra columns?
+
+>There are two issues, though one might be an issue on my end and the other is not really an issue. 
+>Some of the column headers are different to what I expect however others are not:
+>
+>FID: 41270, 20002, 20544, 41271, 21001, 21003 stayed the same but
+>FID: 31 (sex) -> 34
+>FID: 22000 (BATCH) -> 22001
+>changed and the eid has the header of X3.0.0 which isn't an issue but is odd.
+>
+>The other thing was that it did include extra columns.
+>X20003, X20546, X21002, X21021, X41272 were included.
+
+Script used was `/home/control/data/users/danielle/UKBB_data_FI_subset/2_2_2022_UKBB_AN_pheno_subset.sh`
+Output: `/home/control/data/users/danielle/UKBB_data_FI_subset/UKBB_AN_pheno_subset.txt`
+
+Let's start with *FID: 31 (sex) -> 34* using test data.
+
+```
+python3 -u select.specific.columns.from.ukbb.tables.py \
+    -F '31' \
+    -uf sensitive_data/ukb47.head.txt \
+    -o output/bugs.2.ukb47head.tsv \
+    --all
+```
+
+Oh no this is an off by 1 error in the header:
+>subsetted_head_string = [head_string[column_index-1] for column_index in header_index_of_interest]
+
+This was the same line I removed the `-1` from above. Adding this back fixes the header.
+
+Reproduce danielle's output here:
+```
+python3 /home/control/data/users/adam/ukbb_extract_ids_by_phenotype/select.specific.columns.from.ukbb.tables.py \
+    --field '21001 21003 31 22000 41270 20002 20544 41271' \
+    -uf sensitive_data/ukb47.head.txt \
+    --out output/UKBB_AN_pheno_subset.txt \
+    --all_columns_of_field 
+```
